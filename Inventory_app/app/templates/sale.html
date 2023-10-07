@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <title>Purchase Form</title>
+</head>
+<body>
+    {% include "base.html" %}
+    <div class="container mt-5">
+        
+
+         {% comment %} <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0" style="color: 	#454B1B;">SALE FORM</h2> <!-- Orange color -->
+            <h5 id="qn_ty" class="mb-0" style="color:#2AAA8A;">Available Quantity:</h5> <!-- Yellow color -->
+        </div> {% endcomment %}
+        
+        <form method="post">
+            {% csrf_token %}
+            {{ mstr_form.as_p }}
+            <hr class="my-4">
+            {{ details_form.as_table }}
+            <button type="submit" class="btn btn-primary">Save Purchase</button>
+        </form>
+    </div>
+    <div class="container mt-5">
+        <h2 class="mb-4">SALE DETAILS</h2>
+        <form method="post">
+            {% csrf_token %}
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Customer Name</th>
+                        <th scope="col">Product Name</th>
+                        <th scope="col">Price</th>
+
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Total</th>
+                        
+
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in key1 %}
+                    <tr>
+                        <td>{{ i.customer_name }}</td>
+                        <td>{{ i.item_id }}</td>
+                        <td>{{ i.price }}</td>
+                        <td>{{ i.quantity }}</td>
+                        <td>{{ i.amount }}</td>
+                       
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% comment %} <h3>{{amount}}</h3> {% endcomment %}
+            <div class="container mt-5">
+              <h2 class="mb-4">Total Amount</h2>
+              <h3 class="text-success">&#8377;{{ amount }}</h3> {# &#8377; is the HTML entity for the rupees symbol #}
+          </div>
+            <input type="submit" class="btn btn-primary" value="Submit" name="create_sale">
+        </form>
+    </div>
+
+    {% comment %} <form method="post" id="myForm">
+      <!-- Form fields and buttons go here -->
+
+      {{ mstr_form.as_p }}
+  </form> {% endcomment %}
+    <!-- Include Bootstrap JavaScript (optional) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        //STEP----1 Targeting Form
+        $(document).ready(function () {
+            var lastInvoiceNumber = 121;
+            // Get references to the elements
+            var selectedItem = $("#id_item_id");
+            var price = $("#id_price");
+            var quantity = $("#id_quantity");
+            var total = $("#id_amount");
+            var dis = $("#qn_ty");
+            var invoice = $("#id_invoice_no");
+            var availability = 0;  // Variable to store product availability
+        
+            function generateInvoiceNumber() {
+                lastInvoiceNumber++;
+                invoice.val(lastInvoiceNumber);
+            }
+
+            function generateUniqueString() {
+                var randomNumber = Math.floor(Math.random() * 1000000); // Generate a random number between 0 and 999
+                {% comment %} var timestamp = new Date().getTime(); // Get the current timestamp {% endcomment %}
+            
+                var uniqueString = randomNumber 
+                invoice.val(uniqueString);
+            }
+        
+
+            invoice.on("click", function () {
+                // This function will be executed when the input element is clicked
+                generateUniqueString()
+                console.log("Input element clicked!");
+                // You can perform any actions or logic here
+            });
+
+            // Add an input event listener to the quantity field
+            quantity.on("input", function () {
+                // This function will be called whenever the input value changes
+                var str_Quan = quantity.val();
+                console.log(str_Quan);
+        
+                // Calculate the total when the quantity changes
+                calculateTotal(str_Quan);
+            });
+        
+            // Function to calculate the total
+            function calculateTotal(str_Quan) {
+                // Get the price and quantity values
+                var selectedPrice = parseFloat(price.val());
+                var selectedQuantity = parseFloat(str_Quan);
+        
+                // Check if the selected quantity is greater than availability
+                if (selectedQuantity > availability) {
+                    // Show an alert if quantity is greater than availability
+                    alert("Quantity cannot be greater than availability!");
+                    // Reset the quantity input to the available quantity
+                    quantity.val(1);
+                }
+        
+                var totalValue = selectedPrice * selectedQuantity;
+                total.val(totalValue.toFixed(2));
+            }
+        
+            selectedItem.on("change", function () {
+                var selectedItemValue = selectedItem.val();
+                dis.val(availability);
+        
+                // Make an AJAX request to fetch the price and availability
+                $.ajax({
+                    url: '/getpricesale/', // Replace with the correct URL
+                    type: 'GET',
+                    data: { item: selectedItemValue },
+                    success: function (data) {
+                        price.val(data.price);  // Assuming data contains the price
+                        availability = data.avl;  // Assuming data contains the availability
+                        console.log(data);
+                        $('#qn_ty').text('Available Quantity: ' + availability);
+                        calculateTotal(quantity.val());  // Recalculate total based on quantity
+                    },
+                    error: function () {
+                        // Handle errors here
+                    }
+                });
+            });
+        
+            // Call the generateInvoiceNumber function when you need to generate a new invoice number
+           
+        });
+        
+      
+
+        
+    </script>
+
+</body>
+</html>
